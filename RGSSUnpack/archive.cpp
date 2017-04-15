@@ -105,6 +105,7 @@ int extract_v1(char* arcfile, char* outpath, unsigned int magickey, bool writelo
 		si = sihead;
 		c++;
 	}
+	delete si;
 	fprintf(flog, "finish.\n");
 	callback(100, parameter);
 	fclose(flog);
