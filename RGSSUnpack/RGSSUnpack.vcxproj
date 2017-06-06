@@ -116,10 +116,12 @@
   <ItemGroup>
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="RGSSUnpack.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="archive.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RGSSUnpack.rc" />

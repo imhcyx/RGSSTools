@@ -1,9 +1,9 @@
 #include <windows.h>
-#include <Shlobj.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "archive.h"
+#include "util.h"
 
 struct RGSSAD_SUB_INFO {
 	RGSSAD_SUB_INFO* next;
@@ -11,15 +11,14 @@ struct RGSSAD_SUB_INFO {
 	unsigned int Offset;
 	unsigned int FileSize;
 	unsigned int MagicKey;
-	char FileName[256]; // subject to FileNameSize
+	char FileName[256];
 };
 
-int extract_v1(char* arcfile, char* outpath, unsigned int magickey, bool writelog, PROGRESS_CALLBACK callback, int parameter) {
+EXTRACT_RESULT extract_v1(char* arcfile, char* outpath, unsigned int magickey, bool writelog, PROGRESS_CALLBACK callback, int parameter) {
 	FILE *farc, *flog, *fout;
 	unsigned int i, leftsize;
 	unsigned int filecount = 1, c = 0;
 	char magic[8];
-	wchar_t wbuf[256];
 	char buf[1024];
 	if (fopen_s(&farc, arcfile, "rb")) {
 		return RESULT_IOERR;
@@ -52,8 +51,7 @@ int extract_v1(char* arcfile, char* outpath, unsigned int magickey, bool writelo
 			magickey = magickey * 7 + 3;
 		}
 		si->FileName[i] = 0;
-		MultiByteToWideChar(CP_UTF8, 0, si->FileName, -1, wbuf, 256);
-		WideCharToMultiByte(CP_ACP, 0, wbuf, -1, si->FileName, 256, NULL, NULL);
+		utf8_to_ansi(si->FileName, 256);
 		if (fread(&si->FileSize, 4, 1, farc) != 1) break;
 		si->FileSize ^= magickey;
 		magickey = magickey * 7 + 3;
@@ -73,7 +71,7 @@ int extract_v1(char* arcfile, char* outpath, unsigned int magickey, bool writelo
 		sprintf_s(buf, "%s\\%s", outpath, si->FileName);
 		for (i = strlen(buf); buf[i] != '\\'; i--);
 		buf[i] = '\0';
-		SHCreateDirectoryEx(NULL, buf, NULL);
+		mkdir_p(buf);
 		if (fopen_s(&fout, si->FileName, "wb")) {
 			fclose(flog);
 			fclose(farc);
@@ -106,7 +104,7 @@ int extract_v1(char* arcfile, char* outpath, unsigned int magickey, bool writelo
 		c++;
 	}
 	delete si;
-	fprintf(flog, "finish.\n");
+	fprintf(flog, "done.\n");
 	callback(100, parameter);
 	fclose(flog);
 	fclose(farc);
